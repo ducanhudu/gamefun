@@ -25,7 +25,7 @@ export class GameLocal extends GameBase {
   beforeMoveApplied() {
     if (statusboxBodyGame) {
       const currentPlayer = this.players[this.currentPlayerId]
-      statusboxBodyGame.textContent = `Dropping ${currentPlayer.boardPiece} disc`
+      statusboxBodyGame.textContent = `Đang thả quân ${currentPlayer.boardPiece}`
     }
   }
   waitingForMove() {
@@ -34,7 +34,7 @@ export class GameLocal extends GameBase {
     }
 
     if (statusboxBodyGame) {
-      statusboxBodyGame.textContent = 'Wating for move'
+      statusboxBodyGame.textContent = 'Đang chờ nước đi'
     }
 
     if (statusboxBodyPlayer) {
@@ -54,35 +54,35 @@ export class GameLocal extends GameBase {
       return
     }
     let winnerPlayer: Player | undefined
-    let message = '<h1>Thank you for playing.</h1>'
+    let message = '<h1>Ván chơi đã kết thúc.</h1>'
     if (winnerBoardPiece === BoardPiece.DRAW) {
-      message += `It's a draw`
+      message += 'Kết quả hòa'
     } else {
       winnerPlayer = this.players.find(
         (player) => player.boardPiece === winnerBoardPiece,
       )
       if (winnerPlayer) {
-        message += `${winnerPlayer.label} ${winnerPlayer.boardPiece} won`
+        message += `${winnerPlayer.label} ${winnerPlayer.boardPiece} chiến thắng`
       } else {
-        message += `Player ${winnerBoardPiece} won`
+        message += `Người chơi ${winnerBoardPiece} chiến thắng`
       }
     }
     message +=
-      '.<br />After dismissing this message, click the board to reset game.'
+      '.<br />Sau khi đóng thông báo này, hãy bấm vào bàn cờ để chơi lại.'
     showMessage(message)
 
     if (statusboxBodyGame) {
-      statusboxBodyGame.textContent = 'Game over'
+      statusboxBodyGame.textContent = 'Ván chơi kết thúc'
     }
     if (statusboxBodyPlayer) {
       statusboxBodyPlayer.textContent =
         winnerBoardPiece === BoardPiece.DRAW
-          ? `It's a draw`
+          ? 'Kết quả hòa'
           : winnerPlayer
-            ? `${winnerPlayer.label} ${winnerPlayer.boardPiece} won`
-            : `Player ${
+            ? `${winnerPlayer.label} ${winnerPlayer.boardPiece} chiến thắng`
+            : `Người chơi ${
                 winnerBoardPiece === BoardPiece.PLAYER_1 ? '1 🔴' : '2 🔵'
-              } won`
+              } chiến thắng`
     }
   }
 }
@@ -93,7 +93,7 @@ export function initGameLocal(
 ) {
   const canvas = document.querySelector('canvas')
   if (!canvas) {
-    console.error('Canvas DOM is null')
+    console.error('Không tìm thấy phần tử bàn cờ')
     return
   }
   const board = new Board(canvas)
@@ -103,7 +103,7 @@ export function initGameLocal(
 
   game.start()
   if (statusboxBodyGame) {
-    statusboxBodyGame.textContent = 'Wating for move'
+    statusboxBodyGame.textContent = 'Đang chờ nước đi'
   }
 
   if (statusboxBodyPlayer) {

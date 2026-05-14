@@ -17,6 +17,7 @@
 * {
   box-sizing: border-box;
 }
+
 html,
 body {
   width: 100%;
@@ -30,9 +31,11 @@ body {
     linear-gradient(180deg, var(--bg) 0%, #f8f4ec 100%);
   font-family: "Avenir Next", "Segoe UI", sans-serif;
 }
+
 body {
   text-align: center;
 }
+
 button {
   font-family: inherit;
   font-size: 0.95em;
@@ -49,48 +52,55 @@ button {
     box-shadow 120ms ease,
     background 120ms ease;
 }
+
 button:hover {
   cursor: pointer;
   transform: translateY(-1px);
   box-shadow: 0 14px 28px rgba(23, 67, 163, 0.28);
   background: linear-gradient(135deg, var(--brand-strong) 0%, #1d49aa 100%);
 }
+
 button:active {
   transform: translateY(0);
 }
+
 input,
 label,
 button {
   font-family: inherit;
 }
+
 a {
   color: var(--brand);
 }
+
 a:hover {
   color: var(--brand-strong);
 }
+
+h1,
 h1 {
   font-size: 1.7em;
   margin: 0.35em 0;
   letter-spacing: -0.03em;
 }
+
 h2 {
   font-size: 1.15em;
   margin: 0.75em 0 0.5em;
   color: var(--brand-strong);
 }
+
 p {
+  margin-top: 0;
   color: var(--muted);
   line-height: 1.6;
 }
-.section {
-  margin: 1.5em auto 0 auto;
-  width: min(100%, 920px);
-  padding: 0 1rem;
-}
+
 .header {
   padding: 1.25rem 1rem 0.25rem;
 }
+
 .header-title {
   display: inline-flex;
   align-items: center;
@@ -103,6 +113,13 @@ p {
   box-shadow: 0 8px 24px rgba(41, 53, 86, 0.08);
   backdrop-filter: blur(10px);
 }
+
+.section {
+  margin: 1.5em auto 0 auto;
+  width: min(100%, 920px);
+  padding: 0 1rem;
+}
+
 .init-screen,
 .message-body {
   text-align: left;
@@ -114,32 +131,35 @@ p {
   max-width: 34em;
   box-shadow: var(--shadow);
 }
+
 .init-screen::backdrop,
 .message-body::backdrop {
   background-color: rgba(22, 25, 35, 0.32);
   backdrop-filter: blur(10px);
 }
+
 .game-settings-form {
   display: grid;
   grid-template-columns: 2fr 3fr;
   gap: 1em;
   margin-bottom: 1em;
 }
+
 .game-settings-form-section {
   grid-column: 1 / span 2;
 }
+
 .game-settings-mode-list {
   list-style: none;
   padding-left: 0;
   margin-top: 0.5em;
   margin-bottom: 0;
 }
-.game-settings-mode-list li + li {
-  margin-top: 0.6em;
-}
+
 .game-settings-mode-input {
   accent-color: var(--brand);
 }
+
 .game-settings-player-1-name-input,
 .game-settings-player-2-name-input,
 .copy-box {
@@ -150,24 +170,29 @@ p {
   padding: 0.8em 0.95em;
   color: var(--ink);
 }
+
 .game-settings-player-1-name-input:focus,
 .game-settings-player-2-name-input:focus,
 .copy-box:focus {
   outline: 2px solid rgba(23, 67, 163, 0.18);
   border-color: rgba(23, 67, 163, 0.34);
 }
+
 .game-settings-submit {
   justify-self: start;
 }
+
 .copy-box {
   max-width: 28em;
   margin-right: 1em;
 }
+
 .hidden {
   display: none;
 }
+
 .statusbox {
-  width: min(100% - 2rem, 920px);
+  width: min(100% - 2rem, 980px);
   margin: 1rem auto 2rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--line);
@@ -176,6 +201,7 @@ p {
   box-shadow: 0 16px 40px rgba(20, 31, 61, 0.1);
   backdrop-filter: blur(10px);
 }
+
 .statusbox-body,
 .statusbox-controls {
   display: flex;
@@ -185,20 +211,24 @@ p {
   margin: 0 auto;
   gap: 1em;
 }
+
 .statusbox-controls {
   margin-top: 1em;
   justify-content: center;
 }
+
 .statusbox-button {
   color: var(--ink);
   border: 1px solid var(--line);
   background: var(--surface-strong);
   box-shadow: none;
 }
+
 .statusbox-button:hover {
   background: #eef3ff;
   border-color: rgba(23, 67, 163, 0.24);
 }
+
 .section-canvas {
   display: block;
   width: min(100%, 680px);
@@ -209,9 +239,11 @@ p {
     linear-gradient(180deg, rgba(255, 250, 240, 0.9), rgba(255, 255, 255, 0.7));
   box-shadow: var(--shadow);
 }
+
 .section-message {
   min-height: 0.5rem;
 }
+
 @media (max-width: 680px) {
   .header {
     padding-top: 1rem;

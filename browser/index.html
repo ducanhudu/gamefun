@@ -1,20 +1,20 @@
 ﻿<!doctype html>
-<html lang="en" dir="ltr">
+<html lang="vi" dir="ltr">
   <head>
     <meta charset="utf-8" />
-    <title>c4 - Connect Four</title>
+    <title>XO Plus</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Connect Four game in JS + Canvas. Play against artificial intelligence or with other human offline or online!"
+      content="XO Plus là trò chơi nối bốn quân trên bàn cờ. Bạn có thể chơi với máy hoặc chơi hai người trên cùng một máy."
     />
-    <link rel="canonical" href="https://kenrick95.github.io/c4/" />
-    <meta property="og:url" content="https://kenrick95.github.io/c4/" />
+    <link rel="canonical" href="https://github.com/ducanhudu/gamefun" />
+    <meta property="og:url" content="https://github.com/ducanhudu/gamefun" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="c4 - Connect Four" />
+    <meta property="og:title" content="XO Plus" />
     <meta
       property="og:description"
-      content="Connect Four game in JS + Canvas. Play against artificial intelligence or with other human offline or online!"
+      content="XO Plus là trò chơi nối bốn quân trên bàn cờ. Bạn có thể chơi với máy hoặc chơi hai người trên cùng một máy."
     />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   </head>
@@ -24,10 +24,10 @@
       <h1 class="header-title">
         <img
           src="/logo.svg"
-          alt="c4 - Connect Four logo"
+          alt="Biểu tượng XO Plus"
           width="24"
           height="24"
-        /> c4 - Connect Four
+        /> XO Plus
       </h1>
     </header>
     <section class="section">
@@ -39,34 +39,26 @@
       <h1>
         <img
           src="/logo.svg"
-          alt="c4 - Connect Four logo"
+          alt="Biểu tượng XO Plus"
           width="24"
           height="24"
         />
-        c4 - Connect Four
+        XO Plus
       </h1>
-      <h2>How to play?</h2>
-      <p>Connect Four is a two-player game.</p>
+      <h2>Cách chơi</h2>
+      <p>XO Plus là trò chơi dành cho hai người chơi.</p>
       <p>
-        Taking turn, each player drops a coloured piece to one of the 7-columns
-        of the board. The piece will then travel down to the next empty row in
-        that column.
+        Mỗi lượt, người chơi sẽ thả một quân cờ vào một trong 7 cột. Quân cờ sẽ
+        rơi xuống ô trống thấp nhất trong cột đó.
       </p>
       <p>
-        The first player to form a connection of four pieces horizontally,
-        vertically, or diagonally wins the game. If the board is completely
-        filled but no one has won, the game is a draw.
+        Người nào nối được 4 quân liên tiếp theo hàng ngang, hàng dọc hoặc đường
+        chéo trước sẽ thắng. Nếu bàn cờ đã đầy mà chưa ai thắng thì ván đó hòa.
       </p>
-      <p>
-        For a more detailed explanation, you can refer to
-        <a href="https://en.wikipedia.org/wiki/Connect_Four" target="_blank"
-          >Connect Four article on Wikipedia</a
-        >.
-      </p>
-      <h2>Game Settings</h2>
+      <h2>Thiết lập ván chơi</h2>
       <form method="dialog" class="game-settings-form">
         <div class="game-settings-form-section">
-          Playing Mode:
+          Chế độ chơi:
           <ul class="game-settings-mode-list">
             <li>
               <label
@@ -78,7 +70,7 @@
                   checked
                   autofocus
                 />
-                Offline: Human player vs AI player</label
+                Chơi với máy</label
               >
             </li>
             <li>
@@ -89,33 +81,33 @@
                   name="mode"
                   value="offline-human"
                 />
-                Offline: Human player vs human player</label
+                Hai người chơi</label
               >
             </li>
           </ul>
         </div>
         <label class="game-settings-player-1-name-label" for="player-1-name">
-          Player's name:
+          Tên người chơi:
         </label>
         <input
           type="text"
           class="game-settings-player-1-name-input"
-          value="Player 1"
+          value="Người chơi 1"
           name="player-1-name"
-          placeholder="Player 1"
+          placeholder="Người chơi 1"
         />
         <label class="game-settings-player-2-name-label" for="player-2-name">
-          Player's name:
+          Tên người chơi:
         </label>
         <input
           type="text"
           class="game-settings-player-2-name-input"
-          value="Player 2"
+          value="Người chơi 2"
           name="player-2-name"
-          placeholder="Player 2"
+          placeholder="Người chơi 2"
         />
         <button class="game-settings-submit" type="submit" value="confirm">
-          Start game
+          Bắt đầu chơi
         </button>
       </form>
     </dialog>
@@ -130,7 +122,7 @@
           class="hidden statusbox-button statusbox-button-back"
           type="button"
         >
-          End game
+          Kết thúc ván
         </button>
       </div>
     </div>
@@ -139,7 +131,7 @@
       <form method="dialog" class="message-form">
         <div class="message-body-content"></div>
         <button class="message-body-dismiss" type="submit" value="ok">
-          OK
+          Đóng
         </button>
       </form>
     </dialog>

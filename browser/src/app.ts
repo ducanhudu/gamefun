@@ -6,14 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.querySelector('.section-canvas') as HTMLCanvasElement
 
   if (!canvas) {
-    console.error('Canvas element not found')
+    console.error('Không tìm thấy vùng bàn cờ')
     return
   }
   const initScreenDOM = document.querySelector(
     '.init-screen',
   ) as HTMLDialogElement
   if (!initScreenDOM) {
-    console.error('Mode element not found ')
+    console.error('Không tìm thấy cửa sổ chọn chế độ')
     return
   }
   const board = new Board(canvas)
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ) as HTMLFormElement
 
   if (!settingsForm) {
-    console.error('.game-settings-form not found ')
+    console.error('Không tìm thấy biểu mẫu thiết lập trò chơi')
     return
   }
 
@@ -85,8 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderForm() {
     if (chosenMode === 'offline-human') {
-      player1NameLabel.textContent = `First player's name:`
-      player2NameLabel.textContent = `Second player's name:`
+      player1NameLabel.textContent = `Tên người chơi thứ nhất:`
+      player2NameLabel.textContent = `Tên người chơi thứ hai:`
       player1NameLabel.classList.remove('hidden')
       player1NameInput.classList.remove('hidden')
       player2NameLabel.classList.remove('hidden')
@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
       player1NameInput.disabled = false
       player2NameInput.disabled = false
     } else if (chosenMode === 'offline-ai') {
-      player1NameLabel.textContent = `Player's name:`
-      player2NameLabel.textContent = `Player's name:`
+      player1NameLabel.textContent = `Tên người chơi:`
+      player2NameLabel.textContent = `Tên người chơi:`
       player1NameLabel.classList.remove('hidden')
       player1NameInput.classList.remove('hidden')
       player2NameLabel.classList.add('hidden')
@@ -106,17 +106,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initGame(chosenMode: string | null, playerNames: (string | null)[]) {
-    console.log('initGame chosenMode:', chosenMode)
+    console.log('Khởi tạo ván với chế độ:', chosenMode)
     backToModeSelector?.classList.remove('hidden')
     if (chosenMode === 'offline-human') {
       currentGameHandler = Game.initGameLocal2p(
-        playerNames[0] || 'Player 1',
-        playerNames[1] || 'Player 2',
+        playerNames[0] || 'Người chơi 1',
+        playerNames[1] || 'Người chơi 2',
       )
     } else if (chosenMode === 'offline-ai') {
-      currentGameHandler = Game.initGameLocalAi(playerNames[0] || 'Player 1')
+      currentGameHandler = Game.initGameLocalAi(
+        playerNames[0] || 'Người chơi 1',
+      )
     } else {
-      console.error('Invalid game mode received', chosenMode)
+      console.error('Nhận được chế độ chơi không hợp lệ', chosenMode)
     }
   }
 })

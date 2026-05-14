@@ -2,14 +2,14 @@ export function showMessage(message: string = ''): void {
   const messageDOM: HTMLDialogElement | null =
     document.querySelector('.message-body')
   if (!messageDOM) {
-    console.error('.message-body not found')
+    console.error('Không tìm thấy hộp thoại thông báo')
     return
   }
   const messageContentDOM: HTMLDivElement | null = document.querySelector(
     '.message-body-content',
   )
   if (!messageContentDOM) {
-    console.error('.message-body-content not found')
+    console.error('Không tìm thấy nội dung hộp thoại')
     return
   }
 
