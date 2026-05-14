@@ -18,14 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const board = new Board(canvas)
   board.render()
-
-  const searchParams = new URLSearchParams(location.search)
-  const connectionMatchId = searchParams.get('matchId')
   const backToModeSelector = document.querySelector(
     '.statusbox-button-back',
-  ) as HTMLDivElement
-  const shareButton = document.querySelector(
-    '.statusbox-button-share',
   ) as HTMLDivElement
 
   const settingsForm = document.querySelector(
@@ -58,10 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     | null = null
 
   backToModeSelector?.classList.add('hidden')
-  shareButton?.classList.add('hidden')
   initScreenDOM.showModal()
 
-  let chosenMode: string = connectionMatchId ? 'online-human' : 'offline-ai'
+  let chosenMode = 'offline-ai'
   renderForm()
 
   backToModeSelector?.addEventListener('click', () => {
@@ -69,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
       currentGameHandler.end()
     }
     backToModeSelector?.classList.add('hidden')
-    shareButton?.classList.add('hidden')
     initScreenDOM.showModal()
   })
 
@@ -92,27 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   function renderForm() {
-    if (connectionMatchId) {
-      for (const el of settingsForm.querySelectorAll(
-        '.game-settings-mode-input',
-      )) {
-        const checkboxEl = el as HTMLInputElement
-        checkboxEl.readOnly = true
-        if (checkboxEl.value === 'online-human') {
-          checkboxEl.checked = true
-        } else {
-          checkboxEl.checked = false
-        }
-      }
-
-      player2NameLabel.textContent = `Your name:`
-      player1NameInput.disabled = true
-      player2NameInput.disabled = false
-      player1NameLabel.classList.add('hidden')
-      player1NameInput.classList.add('hidden')
-      player2NameLabel.classList.remove('hidden')
-      player2NameInput.classList.remove('hidden')
-    } else if (chosenMode === 'offline-human') {
+    if (chosenMode === 'offline-human') {
       player1NameLabel.textContent = `First player's name:`
       player2NameLabel.textContent = `Second player's name:`
       player1NameLabel.classList.remove('hidden')
@@ -130,24 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
       player2NameInput.classList.add('hidden')
       player1NameInput.disabled = false
       player2NameInput.disabled = true
-    } else if (chosenMode === 'online-human') {
-      player1NameLabel.textContent = `Your name:`
-      player2NameLabel.textContent = `Other player's name:`
-      player1NameLabel.classList.remove('hidden')
-      player1NameInput.classList.remove('hidden')
-      player2NameLabel.classList.add('hidden')
-      player2NameInput.classList.add('hidden')
-      player1NameInput.disabled = false
-      player2NameInput.disabled = true
-    } else if (chosenMode === 'ai-vs-ai') {
-      player1NameLabel.textContent = `Player's name:`
-      player2NameLabel.textContent = `Player's name:`
-      player1NameLabel.classList.add('hidden')
-      player1NameInput.classList.add('hidden')
-      player2NameLabel.classList.add('hidden')
-      player2NameInput.classList.add('hidden')
-      player1NameInput.disabled = true
-      player2NameInput.disabled = true
     }
   }
 
@@ -161,14 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
       )
     } else if (chosenMode === 'offline-ai') {
       currentGameHandler = Game.initGameLocalAi(playerNames[0] || 'Player 1')
-    } else if (chosenMode === 'online-human') {
-      currentGameHandler = Game.initGameOnline2p(
-        connectionMatchId
-          ? playerNames[1] || 'Player 2'
-          : playerNames[0] || 'Player 1',
-      )
-    } else if (chosenMode === 'ai-vs-ai') {
-      currentGameHandler = Game.initGameAiVsAi()
     } else {
       console.error('Invalid game mode received', chosenMode)
     }
