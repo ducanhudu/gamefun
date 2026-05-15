@@ -44,6 +44,7 @@ body {
 
 button,
 input,
+select,
 label {
   font-family: inherit;
 }
@@ -83,7 +84,8 @@ button:disabled {
   box-shadow: 0 10px 20px rgba(84, 94, 128, 0.08);
 }
 
-input {
+input,
+select {
   border: 1px solid rgba(140, 154, 185, 0.28);
   border-radius: 16px;
   padding: 0.8rem 0.95rem;
@@ -92,7 +94,8 @@ input {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: 2px solid rgba(111, 149, 255, 0.2);
   border-color: rgba(111, 149, 255, 0.5);
 }
@@ -222,6 +225,36 @@ p {
   width: min(100%, 980px);
   margin: 0 auto;
   padding: 0 1rem 2rem;
+}
+
+.page-footer {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 980px);
+  margin: 1.4rem auto 0;
+  padding: 0 1rem 1.8rem;
+  text-align: center;
+}
+
+.page-footer-text {
+  color: rgba(43, 48, 66, 0.66);
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+.page-footer-text a {
+  color: rgba(43, 48, 66, 0.9);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(43, 48, 66, 0.18);
+  transition:
+    color 140ms ease,
+    border-bottom-color 140ms ease;
+}
+
+.page-footer-text a:hover {
+  color: rgba(43, 48, 66, 1);
+  border-bottom-color: rgba(43, 48, 66, 0.48);
 }
 
 .section-board {

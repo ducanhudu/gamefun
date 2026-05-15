@@ -1,6 +1,7 @@
 import { Board } from './board'
 import * as Game from './game'
 import './style.css'
+import type { AiDifficulty } from './game/game-local-ai'
 import { soundController } from './utils/sound'
 
 const DEFAULT_HUMAN_1 = 'Người chơi 1'
@@ -40,6 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const player2NameInput = settingsForm.querySelector(
     '.game-settings-player-2-name-input',
   ) as HTMLInputElement | null
+  const aiDifficultyLabel = settingsForm.querySelector(
+    '.game-settings-ai-difficulty-label',
+  ) as HTMLLabelElement | null
+  const aiDifficultyInput = settingsForm.querySelector(
+    '.game-settings-ai-difficulty-input',
+  ) as HTMLSelectElement | null
 
   let currentGameHandler:
     | {
@@ -77,7 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
       !player1NameLabel ||
       !player2NameLabel ||
       !player1NameInput ||
-      !player2NameInput
+      !player2NameInput ||
+      !aiDifficultyLabel ||
+      !aiDifficultyInput
     ) {
       return
     }
@@ -90,6 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
       player1NameInput.classList.remove('hidden')
       player2NameLabel.classList.remove('hidden')
       player2NameInput.classList.remove('hidden')
+      aiDifficultyLabel.classList.add('hidden')
+      aiDifficultyInput.classList.add('hidden')
+      aiDifficultyInput.disabled = true
       player1NameInput.disabled = false
       player2NameInput.disabled = false
       return
@@ -104,12 +116,19 @@ document.addEventListener('DOMContentLoaded', () => {
     player1NameInput.classList.remove('hidden')
     player2NameLabel.classList.add('hidden')
     player2NameInput.classList.add('hidden')
+    aiDifficultyLabel.classList.remove('hidden')
+    aiDifficultyInput.classList.remove('hidden')
+    aiDifficultyInput.disabled = false
     player1NameInput.disabled = false
     player2NameInput.disabled = true
     player2NameInput.value = DEFAULT_AI
   }
 
-  function initGame(chosenMode: string | null, playerNames: Array<string | null>) {
+  function initGame(
+    chosenMode: string | null,
+    playerNames: Array<string | null>,
+    aiDifficulty: AiDifficulty,
+  ) {
     backToModeSelector?.classList.remove('hidden')
 
     if (chosenMode === 'offline-human') {
@@ -122,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentGameHandler = Game.initGameLocalAi(
       playerNames[0]?.trim() || DEFAULT_HUMAN_1,
+      aiDifficulty,
     )
   }
 
@@ -152,7 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameMode = formData.get('mode') as string
     const firstPlayerName = formData.get('player-1-name') as string | null
     const secondPlayerName = formData.get('player-2-name') as string | null
-    initGame(gameMode, [firstPlayerName, secondPlayerName])
+    const aiDifficulty = (formData.get('ai-difficulty') as AiDifficulty) || 'medium'
+    initGame(gameMode, [firstPlayerName, secondPlayerName], aiDifficulty)
   })
 
   settingsForm.addEventListener('input', () => {

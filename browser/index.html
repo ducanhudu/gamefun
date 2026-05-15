@@ -108,6 +108,19 @@
       </section>
     </main>
 
+    <footer class="page-footer">
+      <p class="page-footer-text">
+        A game by ducanhudu. Source code available on
+        <a
+          href="https://github.com/ducanhudu/gamefun"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+        </a>.
+      </p>
+    </footer>
+
     <dialog class="init-screen">
       <h1 class="dialog-title">
         <img
@@ -155,6 +168,22 @@
             </li>
           </ul>
         </div>
+
+        <label
+          class="game-settings-ai-difficulty-label"
+          for="ai-difficulty"
+        >
+          Độ khó của máy:
+        </label>
+        <select
+          id="ai-difficulty"
+          class="game-settings-ai-difficulty-input"
+          name="ai-difficulty"
+        >
+          <option value="easy">Dễ</option>
+          <option value="medium" selected>Trung bình</option>
+          <option value="hard">Khó</option>
+        </select>
 
         <label class="game-settings-player-1-name-label" for="player-1-name">
           Tên người chơi:
