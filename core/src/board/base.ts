@@ -1,5 +1,5 @@
 import type { Player } from '../player'
-import { getMockPlayerAction } from '../utils'
+import { clone, getMockPlayerAction } from '../utils'
 
 export enum BoardPiece {
   EMPTY = ' ',
@@ -7,6 +7,17 @@ export enum BoardPiece {
   PLAYER_2 = '🔵',
   DRAW = 'D',
 }
+export type BoardSnapshot = {
+  map: Array<Array<BoardPiece>>
+  winnerBoardPiece: BoardPiece
+  winningSequence: Array<WinningSequenceCell>
+}
+
+export type WinningSequenceCell = {
+  row: number
+  column: number
+}
+
 export class BoardBase {
   static readonly ROWS: number = 6
   static readonly COLUMNS: number = 7
@@ -26,10 +37,12 @@ export class BoardBase {
 
   map: Array<Array<BoardPiece>>
   protected winnerBoardPiece: BoardPiece
+  protected winningSequence: Array<WinningSequenceCell>
 
   constructor() {
     this.map = []
     this.winnerBoardPiece = BoardPiece.EMPTY
+    this.winningSequence = []
     this.initConstants()
     this.reset()
   }
@@ -43,6 +56,21 @@ export class BoardBase {
       }
     }
     this.winnerBoardPiece = BoardPiece.EMPTY
+    this.winningSequence = []
+  }
+
+  getSnapshot(): BoardSnapshot {
+    return {
+      map: clone(this.map),
+      winnerBoardPiece: this.winnerBoardPiece,
+      winningSequence: this.winningSequence.map((cell) => ({ ...cell })),
+    }
+  }
+
+  restoreSnapshot(snapshot: BoardSnapshot) {
+    this.map = clone(snapshot.map)
+    this.winnerBoardPiece = snapshot.winnerBoardPiece
+    this.winningSequence = snapshot.winningSequence.map((cell) => ({ ...cell }))
   }
 
   initConstants() {
@@ -93,58 +121,38 @@ export class BoardBase {
     if (this.winnerBoardPiece !== BoardPiece.EMPTY) {
       return this.winnerBoardPiece
     }
-    const direction = [
-      [0, -1],
+    const directions = [
       [0, 1],
-      [-1, -1],
-      [-1, 0],
-      [-1, 1],
-      [1, -1],
       [1, 0],
       [1, 1],
+      [1, -1],
     ]
-    const isWinningSequence = (
-      i: number,
-      j: number,
-      playerPiece: BoardPiece,
-      dir: Array<number>,
-      count: number,
-    ): boolean => {
-      if (count >= 4) {
-        return true
-      }
-      if (
-        i < 0 ||
-        j < 0 ||
-        i >= BoardBase.ROWS ||
-        j >= BoardBase.COLUMNS ||
-        this.map[i][j] !== playerPiece
-      ) {
-        return false
-      }
-      return isWinningSequence(
-        i + dir[0],
-        j + dir[1],
-        playerPiece,
-        dir,
-        count + 1,
-      )
-    }
     let countEmpty = 0
     for (let i = 0; i < BoardBase.ROWS; i++) {
       for (let j = 0; j < BoardBase.COLUMNS; j++) {
         const playerPiece = this.map[i][j]
         if (playerPiece !== BoardPiece.EMPTY) {
-          for (let k = 0; k < direction.length; k++) {
-            const isWon = isWinningSequence(
-              i + direction[k][0],
-              j + direction[k][1],
-              playerPiece,
-              direction[k],
-              1,
-            )
-            if (isWon) {
+          for (const [rowDelta, columnDelta] of directions) {
+            const winningCells: Array<WinningSequenceCell> = []
+            for (let step = 0; step < 4; step++) {
+              const row = i + rowDelta * step
+              const column = j + columnDelta * step
+              if (
+                row < 0 ||
+                column < 0 ||
+                row >= BoardBase.ROWS ||
+                column >= BoardBase.COLUMNS ||
+                this.map[row][column] !== playerPiece
+              ) {
+                winningCells.length = 0
+                break
+              }
+              winningCells.push({ row, column })
+            }
+
+            if (winningCells.length === 4) {
               this.winnerBoardPiece = playerPiece
+              this.winningSequence = winningCells
               return playerPiece
             }
           }
@@ -159,6 +167,10 @@ export class BoardBase {
     }
 
     return BoardPiece.EMPTY
+  }
+
+  getWinningSequence(): Array<WinningSequenceCell> {
+    return this.winningSequence.map((cell) => ({ ...cell }))
   }
 
   protected getPlayerColor(boardPiece: BoardPiece): string {

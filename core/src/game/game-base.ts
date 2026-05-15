@@ -16,6 +16,8 @@ export abstract class GameBase<P extends Player = Player> {
     this.reset()
   }
   reset() {
+    this.currentPlayerId = 0
+    this.isGameEnded = false
     this.isMoveAllowed = false
     this.isGameWon = false
     this.board.reset()

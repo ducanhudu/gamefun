@@ -1,48 +1,45 @@
 import { Board } from './board'
 import * as Game from './game'
 import './style.css'
+import { soundController } from './utils/sound'
+
+const DEFAULT_HUMAN_1 = 'Người chơi 1'
+const DEFAULT_HUMAN_2 = 'Người chơi 2'
+const DEFAULT_AI = 'Máy'
 
 document.addEventListener('DOMContentLoaded', () => {
-  const canvas = document.querySelector('.section-canvas') as HTMLCanvasElement
-
-  if (!canvas) {
+  const canvas = document.querySelector('.section-canvas')
+  if (!(canvas instanceof HTMLCanvasElement)) {
     console.error('Không tìm thấy vùng bàn cờ')
     return
   }
-  const initScreenDOM = document.querySelector(
-    '.init-screen',
-  ) as HTMLDialogElement
-  if (!initScreenDOM) {
+
+  const initScreenDOM = document.querySelector('.init-screen')
+  if (!(initScreenDOM instanceof HTMLDialogElement)) {
     console.error('Không tìm thấy cửa sổ chọn chế độ')
     return
   }
-  const board = new Board(canvas)
-  board.render()
-  const backToModeSelector = document.querySelector(
-    '.statusbox-button-back',
-  ) as HTMLDivElement
 
-  const settingsForm = document.querySelector(
-    '.game-settings-form',
-  ) as HTMLFormElement
-
-  if (!settingsForm) {
+  const backToModeSelector = document.querySelector('.statusbox-button-back')
+  const soundToggleButton = document.querySelector('.statusbox-button-sound')
+  const settingsForm = document.querySelector('.game-settings-form')
+  if (!(settingsForm instanceof HTMLFormElement)) {
     console.error('Không tìm thấy biểu mẫu thiết lập trò chơi')
     return
   }
 
   const player1NameLabel = settingsForm.querySelector(
     '.game-settings-player-1-name-label',
-  ) as HTMLLabelElement
+  ) as HTMLLabelElement | null
   const player2NameLabel = settingsForm.querySelector(
     '.game-settings-player-2-name-label',
-  ) as HTMLLabelElement
+  ) as HTMLLabelElement | null
   const player1NameInput = settingsForm.querySelector(
     '.game-settings-player-1-name-input',
-  ) as HTMLInputElement
+  ) as HTMLInputElement | null
   const player2NameInput = settingsForm.querySelector(
     '.game-settings-player-2-name-input',
-  ) as HTMLInputElement
+  ) as HTMLInputElement | null
 
   let currentGameHandler:
     | {
@@ -51,25 +48,106 @@ document.addEventListener('DOMContentLoaded', () => {
     | undefined
     | null = null
 
+  const board = new Board(canvas)
+  board.render()
+
+  function updateSoundButton() {
+    if (soundToggleButton instanceof HTMLButtonElement) {
+      soundToggleButton.textContent = soundController.isEnabled()
+        ? 'Âm thanh: Bật'
+        : 'Âm thanh: Tắt'
+    }
+  }
+
+  function setDefaultHumanNames() {
+    if (!player1NameInput || !player2NameInput) {
+      return
+    }
+
+    if (!player1NameInput.value.trim() || player1NameInput.value === DEFAULT_AI) {
+      player1NameInput.value = DEFAULT_HUMAN_1
+    }
+    if (!player2NameInput.value.trim() || player2NameInput.value === DEFAULT_AI) {
+      player2NameInput.value = DEFAULT_HUMAN_2
+    }
+  }
+
+  function renderForm(chosenMode: string) {
+    if (
+      !player1NameLabel ||
+      !player2NameLabel ||
+      !player1NameInput ||
+      !player2NameInput
+    ) {
+      return
+    }
+
+    if (chosenMode === 'offline-human') {
+      setDefaultHumanNames()
+      player1NameLabel.textContent = 'Tên người chơi thứ nhất:'
+      player2NameLabel.textContent = 'Tên người chơi thứ hai:'
+      player1NameLabel.classList.remove('hidden')
+      player1NameInput.classList.remove('hidden')
+      player2NameLabel.classList.remove('hidden')
+      player2NameInput.classList.remove('hidden')
+      player1NameInput.disabled = false
+      player2NameInput.disabled = false
+      return
+    }
+
+    if (!player1NameInput.value.trim()) {
+      player1NameInput.value = DEFAULT_HUMAN_1
+    }
+    player1NameLabel.textContent = 'Tên người chơi:'
+    player2NameLabel.textContent = 'Tên đối thủ:'
+    player1NameLabel.classList.remove('hidden')
+    player1NameInput.classList.remove('hidden')
+    player2NameLabel.classList.add('hidden')
+    player2NameInput.classList.add('hidden')
+    player1NameInput.disabled = false
+    player2NameInput.disabled = true
+    player2NameInput.value = DEFAULT_AI
+  }
+
+  function initGame(chosenMode: string | null, playerNames: Array<string | null>) {
+    backToModeSelector?.classList.remove('hidden')
+
+    if (chosenMode === 'offline-human') {
+      currentGameHandler = Game.initGameLocal2p(
+        playerNames[0]?.trim() || DEFAULT_HUMAN_1,
+        playerNames[1]?.trim() || DEFAULT_HUMAN_2,
+      )
+      return
+    }
+
+    currentGameHandler = Game.initGameLocalAi(
+      playerNames[0]?.trim() || DEFAULT_HUMAN_1,
+    )
+  }
+
   backToModeSelector?.classList.add('hidden')
+  updateSoundButton()
   initScreenDOM.showModal()
 
   let chosenMode = 'offline-ai'
-  renderForm()
+  renderForm(chosenMode)
 
   backToModeSelector?.addEventListener('click', () => {
-    if (currentGameHandler?.end) {
-      currentGameHandler.end()
-    }
-    backToModeSelector?.classList.add('hidden')
+    currentGameHandler?.end()
+    backToModeSelector.classList.add('hidden')
     initScreenDOM.showModal()
   })
 
-  initScreenDOM.addEventListener('cancel', (ev) => {
-    ev.preventDefault()
+  soundToggleButton?.addEventListener('click', () => {
+    soundController.toggle()
+    updateSoundButton()
   })
 
-  initScreenDOM.addEventListener('close', (ev) => {
+  initScreenDOM.addEventListener('cancel', (event) => {
+    event.preventDefault()
+  })
+
+  initScreenDOM.addEventListener('close', () => {
     const formData = new FormData(settingsForm)
     const gameMode = formData.get('mode') as string
     const firstPlayerName = formData.get('player-1-name') as string | null
@@ -77,48 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initGame(gameMode, [firstPlayerName, secondPlayerName])
   })
 
-  settingsForm.addEventListener('input', (ev) => {
+  settingsForm.addEventListener('input', () => {
     const formData = new FormData(settingsForm)
     chosenMode = formData.get('mode') as string
-    renderForm()
+    renderForm(chosenMode)
   })
-
-  function renderForm() {
-    if (chosenMode === 'offline-human') {
-      player1NameLabel.textContent = `Tên người chơi thứ nhất:`
-      player2NameLabel.textContent = `Tên người chơi thứ hai:`
-      player1NameLabel.classList.remove('hidden')
-      player1NameInput.classList.remove('hidden')
-      player2NameLabel.classList.remove('hidden')
-      player2NameInput.classList.remove('hidden')
-      player1NameInput.disabled = false
-      player2NameInput.disabled = false
-    } else if (chosenMode === 'offline-ai') {
-      player1NameLabel.textContent = `Tên người chơi:`
-      player2NameLabel.textContent = `Tên người chơi:`
-      player1NameLabel.classList.remove('hidden')
-      player1NameInput.classList.remove('hidden')
-      player2NameLabel.classList.add('hidden')
-      player2NameInput.classList.add('hidden')
-      player1NameInput.disabled = false
-      player2NameInput.disabled = true
-    }
-  }
-
-  function initGame(chosenMode: string | null, playerNames: (string | null)[]) {
-    console.log('Khởi tạo ván với chế độ:', chosenMode)
-    backToModeSelector?.classList.remove('hidden')
-    if (chosenMode === 'offline-human') {
-      currentGameHandler = Game.initGameLocal2p(
-        playerNames[0] || 'Người chơi 1',
-        playerNames[1] || 'Người chơi 2',
-      )
-    } else if (chosenMode === 'offline-ai') {
-      currentGameHandler = Game.initGameLocalAi(
-        playerNames[0] || 'Người chơi 1',
-      )
-    } else {
-      console.error('Nhận được chế độ chơi không hợp lệ', chosenMode)
-    }
-  }
 })

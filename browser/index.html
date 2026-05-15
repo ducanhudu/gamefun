@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="vi" dir="ltr">
   <head>
     <meta charset="utf-8" />
@@ -20,6 +20,15 @@
   </head>
 
   <body>
+    <div class="page-ornaments" aria-hidden="true">
+      <span class="ornament ornament-red ornament-a"></span>
+      <span class="ornament ornament-blue ornament-b"></span>
+      <span class="ornament ornament-gold ornament-c"></span>
+      <span class="spark spark-a"></span>
+      <span class="spark spark-b"></span>
+      <span class="spark spark-c"></span>
+    </div>
+
     <header class="header">
       <h1 class="header-title">
         <img
@@ -27,16 +36,80 @@
           alt="Biểu tượng XO Plus"
           width="24"
           height="24"
-        /> XO Plus
+        />
+        XO Plus
       </h1>
     </header>
-    <section class="section">
-      <div class="section-message"></div>
-      <canvas class="section-canvas"></canvas>
-    </section>
+
+    <main class="page-shell">
+      <section class="section section-board">
+        <div class="section-message"></div>
+        <div class="board-frame">
+          <div class="board-fireworks" aria-hidden="true"></div>
+          <canvas class="section-canvas"></canvas>
+        </div>
+      </section>
+
+      <section class="statusbox hidden">
+        <div class="statusbox-body">
+          <div class="statusbox-body-connection hidden">...</div>
+          <p class="statusbox-body-game">...</p>
+          <div class="statusbox-body-player">...</div>
+        </div>
+
+        <div class="scoreboard hidden">
+          <article class="scorecard scorecard-player-1">
+            <span class="scorecard-label scorecard-player-1-label">
+              Người chơi 1
+            </span>
+            <strong class="scorecard-value scorecard-player-1-value">0</strong>
+          </article>
+          <article class="scorecard scorecard-draw">
+            <span class="scorecard-label">Hòa</span>
+            <strong class="scorecard-value scorecard-draw-value">0</strong>
+          </article>
+          <article class="scorecard scorecard-player-2">
+            <span class="scorecard-label scorecard-player-2-label">
+              Người chơi 2
+            </span>
+            <strong class="scorecard-value scorecard-player-2-value">0</strong>
+          </article>
+        </div>
+
+        <div class="statusbox-controls">
+          <button
+            class="hidden statusbox-button statusbox-button-next-round"
+            type="button"
+          >
+            Chơi tiếp
+          </button>
+          <button
+            class="hidden statusbox-button statusbox-button-reset-match"
+            type="button"
+          >
+            Chơi lại
+          </button>
+          <button
+            class="hidden statusbox-button statusbox-button-undo"
+            type="button"
+          >
+            Quay lại
+          </button>
+          <button class="statusbox-button statusbox-button-sound" type="button">
+            Âm thanh: Bật
+          </button>
+          <button
+            class="hidden statusbox-button statusbox-button-back"
+            type="button"
+          >
+            Đổi chế độ
+          </button>
+        </div>
+      </section>
+    </main>
 
     <dialog class="init-screen">
-      <h1>
+      <h1 class="dialog-title">
         <img
           src="/logo.svg"
           alt="Biểu tượng XO Plus"
@@ -46,23 +119,19 @@
         XO Plus
       </h1>
       <h2>Cách chơi</h2>
-      <p>XO Plus là trò chơi dành cho hai người chơi.</p>
+      <p>Mỗi lượt, người chơi sẽ thả một quân cờ vào một trong 7 cột.</p>
       <p>
-        Mỗi lượt, người chơi sẽ thả một quân cờ vào một trong 7 cột. Quân cờ sẽ
-        rơi xuống ô trống thấp nhất trong cột đó.
-      </p>
-      <p>
-        Người nào nối được 4 quân liên tiếp theo hàng ngang, hàng dọc hoặc đường
-        chéo trước sẽ thắng. Nếu bàn cờ đã đầy mà chưa ai thắng thì ván đó hòa.
+        Quân cờ rơi xuống ô trống thấp nhất trong cột. Người nào nối được 4
+        quân liên tiếp theo hàng ngang, dọc hoặc chéo trước sẽ thắng.
       </p>
       <h2>Thiết lập ván chơi</h2>
       <form method="dialog" class="game-settings-form">
         <div class="game-settings-form-section">
-          Chế độ chơi:
+          <span class="form-section-title">Chế độ chơi</span>
           <ul class="game-settings-mode-list">
             <li>
-              <label
-                ><input
+              <label class="game-settings-mode-option">
+                <input
                   class="game-settings-mode-input"
                   type="radio"
                   name="mode"
@@ -70,62 +139,52 @@
                   checked
                   autofocus
                 />
-                Chơi với máy</label
-              >
+                <span>Chơi với máy</span>
+              </label>
             </li>
             <li>
-              <label
-                ><input
+              <label class="game-settings-mode-option">
+                <input
                   class="game-settings-mode-input"
                   type="radio"
                   name="mode"
                   value="offline-human"
                 />
-                Hai người chơi</label
-              >
+                <span>Hai người chơi</span>
+              </label>
             </li>
           </ul>
         </div>
+
         <label class="game-settings-player-1-name-label" for="player-1-name">
           Tên người chơi:
         </label>
         <input
+          id="player-1-name"
           type="text"
           class="game-settings-player-1-name-input"
           value="Người chơi 1"
           name="player-1-name"
           placeholder="Người chơi 1"
         />
+
         <label class="game-settings-player-2-name-label" for="player-2-name">
           Tên người chơi:
         </label>
         <input
+          id="player-2-name"
           type="text"
           class="game-settings-player-2-name-input"
           value="Người chơi 2"
           name="player-2-name"
           placeholder="Người chơi 2"
         />
+
         <button class="game-settings-submit" type="submit" value="confirm">
           Bắt đầu chơi
         </button>
       </form>
     </dialog>
-    <div class="statusbox hidden">
-      <div class="statusbox-body">
-        <div class="statusbox-body-connection">...</div>
-        <div class="statusbox-body-game">...</div>
-        <div class="statusbox-body-player">...</div>
-      </div>
-      <div class="statusbox-controls">
-        <button
-          class="hidden statusbox-button statusbox-button-back"
-          type="button"
-        >
-          Kết thúc ván
-        </button>
-      </div>
-    </div>
 
     <dialog class="message-body">
       <form method="dialog" class="message-form">
@@ -135,6 +194,7 @@
         </button>
       </form>
     </dialog>
+
     <script type="module" src="./src/app.ts"></script>
   </body>
 </html>

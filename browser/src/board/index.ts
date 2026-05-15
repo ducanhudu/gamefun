@@ -1,6 +1,18 @@
-import { BoardBase, BoardPiece, type Player } from '@kenrick95/c4'
+import {
+  BoardBase,
+  BoardPiece,
+  type BoardSnapshot,
+  type Player,
+  type WinningSequenceCell,
+} from '@kenrick95/c4'
 import { animationFrame } from '../utils/animate-frame'
-import { clearCanvas, drawCircle, drawMask, onresize } from './utils'
+import {
+  clearCanvas,
+  drawCircle,
+  drawMask,
+  drawRoundedRect,
+  onresize,
+} from './utils'
 
 export class Board extends BoardBase {
   canvas: HTMLCanvasElement
@@ -9,7 +21,7 @@ export class Board extends BoardBase {
   constructor(canvas: HTMLCanvasElement) {
     super()
     this.canvas = canvas
-    this.context = <CanvasRenderingContext2D>canvas.getContext('2d')
+    this.context = canvas.getContext('2d') as CanvasRenderingContext2D
     this.getBoardScale()
     this.initConstants()
     this.reset()
@@ -17,11 +29,7 @@ export class Board extends BoardBase {
   }
 
   getBoardScale() {
-    if (window.innerWidth < 640) {
-      BoardBase.SCALE = 0.5
-    } else {
-      BoardBase.SCALE = 1.0
-    }
+    BoardBase.SCALE = window.innerWidth < 640 ? 0.5 : 1
     return BoardBase.SCALE
   }
 
@@ -40,26 +48,156 @@ export class Board extends BoardBase {
 
   reset() {
     super.reset()
-    if (this.canvas) {
+    if (this.canvas && this.context) {
       clearCanvas(this)
       this.render()
     }
   }
 
+  restoreSnapshot(snapshot: BoardSnapshot) {
+    super.restoreSnapshot(snapshot)
+    clearCanvas(this)
+    this.render()
+  }
+
   initConstants() {
     super.initConstants()
-    if (this.canvas) {
-      /**
-       * Scale the canvas to make it look sharper on hi-dpi devices
-       * https://www.html5rocks.com/en/tutorials/canvas/hidpi/
-       */
-      const dpr = self.devicePixelRatio || 1
-      this.canvas.width = Board.CANVAS_WIDTH * dpr
-      this.canvas.height = Board.CANVAS_HEIGHT * dpr
-      this.context.scale(dpr, dpr)
-      this.canvas.style.width = Board.CANVAS_WIDTH + 'px'
-      this.canvas.style.height = Board.CANVAS_HEIGHT + 'px'
+    if (!this.canvas || !this.context) {
+      return
     }
+    const dpr = self.devicePixelRatio || 1
+    this.canvas.width = Board.CANVAS_WIDTH * dpr
+    this.canvas.height = Board.CANVAS_HEIGHT * dpr
+    this.context.setTransform(dpr, 0, 0, dpr, 0, 0)
+    this.canvas.style.width = `${Board.CANVAS_WIDTH}px`
+    this.canvas.style.height = `${Board.CANVAS_HEIGHT}px`
+  }
+
+  private getCellCenter(column: number, row: number) {
+    return {
+      x:
+        3 * BoardBase.PIECE_RADIUS * column +
+        BoardBase.MASK_X_BEGIN +
+        2 * BoardBase.PIECE_RADIUS,
+      y:
+        3 * BoardBase.PIECE_RADIUS * row +
+        BoardBase.MASK_Y_BEGIN +
+        2 * BoardBase.PIECE_RADIUS,
+    }
+  }
+
+  private getSlotGradient(x: number, y: number) {
+    const gradient = this.context.createRadialGradient(
+      x - Board.PIECE_RADIUS * 0.32,
+      y - Board.PIECE_RADIUS * 0.38,
+      Board.PIECE_RADIUS * 0.2,
+      x,
+      y,
+      Board.PIECE_RADIUS,
+    )
+    gradient.addColorStop(0, 'rgba(160, 170, 194, 0.45)')
+    gradient.addColorStop(1, 'rgba(118, 129, 154, 0.82)')
+    return gradient
+  }
+
+  private getPieceGradient(
+    x: number,
+    y: number,
+    boardPiece: BoardPiece,
+  ): CanvasGradient {
+    const gradient = this.context.createRadialGradient(
+      x - Board.PIECE_RADIUS * 0.38,
+      y - Board.PIECE_RADIUS * 0.42,
+      Board.PIECE_RADIUS * 0.15,
+      x,
+      y,
+      Board.PIECE_RADIUS,
+    )
+    if (boardPiece === BoardPiece.PLAYER_1) {
+      gradient.addColorStop(0, '#ffc2d1')
+      gradient.addColorStop(0.45, '#ff6b85')
+      gradient.addColorStop(1, '#d9415c')
+      return gradient
+    }
+
+    gradient.addColorStop(0, '#c8ddff')
+    gradient.addColorStop(0.45, '#7aa8ff')
+    gradient.addColorStop(1, '#4d73db')
+    return gradient
+  }
+
+  private drawBoardBackdrop() {
+    const padding = Board.PIECE_RADIUS * 1.7
+    const width = Board.CANVAS_WIDTH - padding * 2
+    const height = Board.CANVAS_HEIGHT - padding * 2
+    const gradient = this.context.createLinearGradient(
+      padding,
+      padding,
+      padding + width,
+      padding + height,
+    )
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.24)')
+    gradient.addColorStop(1, 'rgba(225, 235, 255, 0.08)')
+
+    this.context.save()
+    this.context.fillStyle = gradient
+    this.context.shadowColor = 'rgba(84, 103, 145, 0.12)'
+    this.context.shadowBlur = 24
+    drawRoundedRect(this.context, {
+      x: padding,
+      y: padding,
+      width,
+      height,
+      radius: Board.PIECE_RADIUS * 1.7,
+    })
+    this.context.fill()
+    this.context.restore()
+  }
+
+  private drawSlot(column: number, row: number) {
+    const { x, y } = this.getCellCenter(column, row)
+
+    drawCircle(this.context, {
+      x,
+      y,
+      r: Board.PIECE_RADIUS,
+      fillStyle: this.getSlotGradient(x, y),
+      shadowColor: 'rgba(62, 77, 107, 0.18)',
+      shadowBlur: 10,
+    })
+
+    drawCircle(this.context, {
+      x: x - Board.PIECE_RADIUS * 0.1,
+      y: y - Board.PIECE_RADIUS * 0.1,
+      r: Board.PIECE_RADIUS * 0.68,
+      fillStyle: 'rgba(255, 255, 255, 0.12)',
+    })
+  }
+
+  private drawPiece(column: number, row: number, boardPiece: BoardPiece) {
+    const { x, y } = this.getCellCenter(column, row)
+    const pieceGradient = this.getPieceGradient(x, y, boardPiece)
+
+    drawCircle(this.context, {
+      x,
+      y,
+      r: Board.PIECE_RADIUS,
+      fillStyle: pieceGradient,
+      strokeStyle: 'rgba(255, 255, 255, 0.5)',
+      lineWidth: 1.25,
+      shadowColor:
+        boardPiece === BoardPiece.PLAYER_1
+          ? 'rgba(255, 92, 123, 0.45)'
+          : 'rgba(92, 138, 255, 0.45)',
+      shadowBlur: 16,
+    })
+
+    drawCircle(this.context, {
+      x: x - Board.PIECE_RADIUS * 0.2,
+      y: y - Board.PIECE_RADIUS * 0.26,
+      r: Board.PIECE_RADIUS * 0.45,
+      fillStyle: 'rgba(255, 255, 255, 0.28)',
+    })
   }
 
   private async animateAction(
@@ -67,48 +205,76 @@ export class Board extends BoardBase {
     column: number,
     boardPiece: BoardPiece,
   ): Promise<void> {
-    const fillStyle = this.getPlayerColor(boardPiece)
     let currentY = 0
-    const doAnimation = async () => {
-      clearCanvas(this)
-      drawCircle(this.context, {
-        x:
-          3 * BoardBase.PIECE_RADIUS * column +
-          BoardBase.MASK_X_BEGIN +
-          2 * BoardBase.PIECE_RADIUS,
-        y: currentY + BoardBase.MASK_Y_BEGIN + 2 * BoardBase.PIECE_RADIUS,
-        r: BoardBase.PIECE_RADIUS,
-        fillStyle: fillStyle,
-        strokeStyle: BoardBase.PIECE_STROKE_STYLE,
-      })
-      this.render()
-      currentY += BoardBase.PIECE_RADIUS
-    }
+
     while (newRow * 3 * BoardBase.PIECE_RADIUS >= currentY) {
       await animationFrame()
-      doAnimation()
+      clearCanvas(this)
+      this.drawBoardBackdrop()
+      drawMask(this)
+      for (let y = 0; y < BoardBase.ROWS; y++) {
+        for (let x = 0; x < BoardBase.COLUMNS; x++) {
+          this.drawSlot(x, y)
+        }
+      }
+
+      this.context.save()
+      this.context.translate(0, currentY)
+      this.drawPiece(column, 0, boardPiece)
+      this.context.restore()
+      this.renderPieces()
+      currentY += BoardBase.PIECE_RADIUS
     }
   }
 
-  render() {
-    drawMask(this)
-    for (let y = 0; y < BoardBase.ROWS; y++) {
-      for (let x = 0; x < BoardBase.COLUMNS; x++) {
-        drawCircle(this.context, {
-          x:
-            3 * BoardBase.PIECE_RADIUS * x +
-            BoardBase.MASK_X_BEGIN +
-            2 * BoardBase.PIECE_RADIUS,
-          y:
-            3 * BoardBase.PIECE_RADIUS * y +
-            BoardBase.MASK_Y_BEGIN +
-            2 * BoardBase.PIECE_RADIUS,
-          r: BoardBase.PIECE_RADIUS,
-          fillStyle: this.getPlayerColor(this.map[y][x]),
-          strokeStyle: BoardBase.PIECE_STROKE_STYLE,
-        })
+  private renderPieces() {
+    for (let row = 0; row < BoardBase.ROWS; row++) {
+      for (let column = 0; column < BoardBase.COLUMNS; column++) {
+        const piece = this.map[row][column]
+        if (piece !== BoardPiece.EMPTY) {
+          this.drawPiece(column, row, piece)
+        }
       }
     }
+  }
+
+  private drawWinningLine(winningSequence: Array<WinningSequenceCell>) {
+    if (winningSequence.length < 4) {
+      return
+    }
+
+    const start = this.getCellCenter(
+      winningSequence[0].column,
+      winningSequence[0].row,
+    )
+    const end = this.getCellCenter(
+      winningSequence[winningSequence.length - 1].column,
+      winningSequence[winningSequence.length - 1].row,
+    )
+
+    this.context.save()
+    this.context.strokeStyle = 'rgba(255, 255, 255, 0.96)'
+    this.context.shadowColor = 'rgba(255, 255, 255, 0.86)'
+    this.context.shadowBlur = 20
+    this.context.lineCap = 'round'
+    this.context.lineWidth = Math.max(8, Board.PIECE_RADIUS * 0.28)
+    this.context.beginPath()
+    this.context.moveTo(start.x, start.y)
+    this.context.lineTo(end.x, end.y)
+    this.context.stroke()
+    this.context.restore()
+  }
+
+  render() {
+    this.drawBoardBackdrop()
+    drawMask(this)
+    for (let row = 0; row < BoardBase.ROWS; row++) {
+      for (let column = 0; column < BoardBase.COLUMNS; column++) {
+        this.drawSlot(column, row)
+      }
+    }
+    this.renderPieces()
+    this.drawWinningLine(this.getWinningSequence())
   }
 
   async applyPlayerAction(player: Player, column: number): Promise<boolean> {
@@ -134,12 +300,9 @@ export class Board extends BoardBase {
     }
 
     await this.animateAction(row, column, player.boardPiece)
-
-    // reflect player's action to the map
     this.map[row][column] = player.boardPiece
-    this.debug()
-
     await animationFrame()
+    clearCanvas(this)
     this.render()
     return true
   }
