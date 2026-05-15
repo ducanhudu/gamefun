@@ -1,6 +1,6 @@
 # Gamefun
 
-**Gamefun** là trò chơi nối bốn quân trên trình duyệt, được xây dựng bằng TypeScript và HTML Canvas.
+**XO Plus** là trò chơi dựa trên trò XO cơ bản trên trình duyệt, được xây dựng bằng TypeScript và HTML Canvas.
 
 Dự án này là phiên bản phát triển tiếp từ mã nguồn của chủ sở hữu cũ, sau đó được chỉnh sửa và mở rộng thêm về giao diện, trải nghiệm chơi, chế độ chơi và các hiệu ứng tương tác để tạo thành phiên bản hiện tại.
 
@@ -45,7 +45,7 @@ yarn dev-browser
 
 ## Ghi nhận
 
-Dự án hiện tại được phát triển dựa trên nền tảng từ phiên bản trước của chủ sở hữu cũ, và đã được tùy biến để phù hợp với định hướng sản phẩm `Gamefun`.
+Dự án hiện tại được phát triển dựa trên nền tảng từ phiên bản trước của chủ sở hữu cũ, và đã được tùy biến để phù hợp với định hướng sản phẩm `XO Plus`.
 
 ## License
 
