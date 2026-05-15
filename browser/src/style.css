@@ -1,6 +1,7 @@
 @charset "utf-8";
 
 :root {
+  --content-width: 760px;
   --bg-top: #d7e1ef;
   --bg-bottom: #bbc7d8;
   --surface: rgba(247, 243, 248, 0.5);
@@ -194,7 +195,7 @@ p {
 }
 
 .header {
-  padding: 1.4rem 1rem 0.8rem;
+  padding: 1.4rem 1rem 0.35rem;
   text-align: center;
 }
 
@@ -219,19 +220,27 @@ p {
   font-size: 1.5rem;
 }
 
+.header-subtitle {
+  width: min(100%, 36rem);
+  margin: 0.9rem auto 0;
+  color: rgba(43, 48, 66, 0.72);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
 .page-shell {
   position: relative;
   z-index: 1;
-  width: min(100%, 980px);
+  width: min(100%, calc(var(--content-width) + 2rem));
   margin: 0 auto;
-  padding: 0 1rem 2rem;
+  padding: 0 1rem 1.25rem;
 }
 
 .page-footer {
   position: relative;
   z-index: 1;
-  width: min(100%, 980px);
-  margin: 1.4rem auto 0;
+  width: min(100%, calc(var(--content-width) + 2rem));
+  margin: 0.95rem auto 0;
   padding: 0 1rem 1.8rem;
   text-align: center;
 }
@@ -258,12 +267,17 @@ p {
 }
 
 .section-board {
-  margin: 1.2rem auto 0;
+  margin: 1rem auto 0;
+  text-align: center;
 }
 
 .board-frame {
+  display: inline-block;
   position: relative;
-  padding: 1rem;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 34px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
@@ -288,7 +302,8 @@ p {
   position: relative;
   z-index: 1;
   display: block;
-  width: min(100%, 680px);
+  width: auto;
+  max-width: 100%;
   margin: 0 auto;
   border-radius: 28px;
   background: transparent;
@@ -417,7 +432,7 @@ p {
 }
 
 .statusbox {
-  width: min(100%, 920px);
+  width: min(100%, var(--content-width));
   margin: 1.15rem auto 0;
   padding: 1rem 1.15rem 1.1rem;
 }

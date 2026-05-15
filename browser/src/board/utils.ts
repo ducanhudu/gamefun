@@ -110,12 +110,17 @@ export function drawRoundedRect(
 
 export function drawMask(board: Board) {
   const context = board.context
-  const boardX = Board.MASK_X_BEGIN - Board.PIECE_RADIUS * 0.9
-  const boardY = Board.MASK_Y_BEGIN - Board.PIECE_RADIUS * 0.9
+  const boardPadding = Board.PIECE_RADIUS * 0.9
+  const boardX = Board.MASK_X_BEGIN + Board.PIECE_RADIUS - boardPadding
+  const boardY = Board.MASK_Y_BEGIN + Board.PIECE_RADIUS - boardPadding
   const boardWidth =
-    3 * Board.PIECE_RADIUS * Board.COLUMNS + Board.PIECE_RADIUS * 0.8
+    3 * Board.PIECE_RADIUS * (Board.COLUMNS - 1) +
+    2 * Board.PIECE_RADIUS +
+    2 * boardPadding
   const boardHeight =
-    3 * Board.PIECE_RADIUS * Board.ROWS + Board.PIECE_RADIUS * 0.8
+    3 * Board.PIECE_RADIUS * (Board.ROWS - 1) +
+    2 * Board.PIECE_RADIUS +
+    2 * boardPadding
   const radius = Board.PIECE_RADIUS * 1.2
 
   const boardGradient = context.createLinearGradient(
