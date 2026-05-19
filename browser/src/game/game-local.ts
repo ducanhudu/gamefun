@@ -246,6 +246,7 @@ export function initGameLocal(
   const allowUndo = options.allowUndo ?? false
   const showRoundButtons = options.showRoundButtons ?? false
   const autoRestartOnBoardClick = !showRoundButtons
+  const isTwoPlayerMode = secondPlayer instanceof PlayerHuman
   let celebrationToken = 0
 
   const game = new GameLocalConstructor([firstPlayer, secondPlayer], board, {
@@ -286,8 +287,15 @@ export function initGameLocal(
         if (winnerBoardPiece === BoardPiece.DRAW) {
           void soundController.playDraw()
         } else {
-          void soundController.playWin(winnerBoardPiece)
-          await playFireworks()
+          const isHumanVictory =
+            winnerPlayer?.boardPiece === firstPlayer.boardPiece
+
+          if (isTwoPlayerMode || isHumanVictory) {
+            void soundController.playVictoryTrack()
+            await playFireworks()
+          } else {
+            void soundController.playGameOverTrack()
+          }
         }
 
         if (token !== celebrationToken || !game.isGameWon) {

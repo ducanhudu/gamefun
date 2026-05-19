@@ -2,29 +2,13 @@ import { BoardPiece } from '@kenrick95/c4'
 
 const STORAGE_KEY = 'xo-plus-sound-enabled'
 const MASTER_GAIN_MULTIPLIER = 2.8
-const BACKGROUND_MUSIC_GAIN = 0.56
-const BACKGROUND_STEP_DURATION = 0.4
-
-type BackgroundStep = {
-  bass?: number
-  harmony?: number
-  lead?: number
-}
-
-const BACKGROUND_PATTERN: BackgroundStep[] = [
-  { bass: 130.81, harmony: 261.63, lead: 392.0 },
-  { harmony: 329.63, lead: 440.0 },
-  { bass: 130.81, harmony: 261.63, lead: 392.0 },
-  { harmony: 329.63, lead: 349.23 },
-  { bass: 110.0, harmony: 220.0, lead: 369.99 },
-  { harmony: 277.18, lead: 392.0 },
-  { bass: 98.0, harmony: 196.0, lead: 329.63 },
-  { harmony: 246.94, lead: 293.66 },
-  { bass: 98.0, harmony: 196.0, lead: 329.63 },
-  { harmony: 246.94, lead: 392.0 },
-  { bass: 87.31, harmony: 174.61, lead: 293.66 },
-  { harmony: 220.0, lead: 329.63 },
-]
+const BACKGROUND_MUSIC_URL = `${import.meta.env.BASE_URL}audio/hitslab-game-gaming-music-295075.mp3`
+const BACKGROUND_MUSIC_VOLUME = 0.42
+const BACKGROUND_LOOP_EDGE_TRIM = 0.12
+const WINNER_SOUND_URL = `${import.meta.env.BASE_URL}audio/mori_sound-fx-game-winner-497166_1.mp3`
+const WINNER_SOUND_VOLUME = 0.72
+const GAME_OVER_SOUND_URL = `${import.meta.env.BASE_URL}audio/mori_sound-fx-game-over-497165_1.mp3`
+const GAME_OVER_SOUND_VOLUME = 0.68
 
 type Envelope = {
   frequency: number
@@ -36,10 +20,15 @@ type Envelope = {
 
 class SoundController {
   private audioContext: AudioContext | null = null
+  private backgroundBufferPromise: Promise<AudioBuffer | null> | null = null
+  private backgroundSource: AudioBufferSourceNode | null = null
   private backgroundGainNode: GainNode | null = null
-  private backgroundLoopTimer: number | null = null
-  private backgroundLoopToken = 0
-  private isBackgroundLoopRunning = false
+  private backgroundLoopStart = 0
+  private backgroundLoopEnd = 0
+  private winnerAudio: HTMLAudioElement | null = null
+  private gameOverAudio: HTMLAudioElement | null = null
+  private activeForegroundAudio: HTMLAudioElement | null = null
+  private shouldResumeBackgroundAfterForeground = false
   private enabled =
     window.localStorage.getItem(STORAGE_KEY) !== null
       ? window.localStorage.getItem(STORAGE_KEY) === 'true'
@@ -52,6 +41,10 @@ class SoundController {
   toggle() {
     this.enabled = !this.enabled
     window.localStorage.setItem(STORAGE_KEY, String(this.enabled))
+
+    if (!this.enabled) {
+      this.stopForegroundAudio()
+    }
     void this.syncBackgroundMusic()
     return this.enabled
   }
@@ -151,14 +144,24 @@ class SoundController {
     ])
   }
 
+  async playVictoryTrack() {
+    await this.playForegroundTrack(this.getWinnerAudio())
+  }
+
+  async playGameOverTrack() {
+    await this.playForegroundTrack(this.getGameOverAudio())
+  }
+
   private async play(envelopes: Envelope[]) {
     if (!this.enabled) {
       return
     }
+
     const context = await this.getContext()
     if (!context) {
       return
     }
+
     await this.startBackgroundMusic()
 
     const startTime = context.currentTime
@@ -184,189 +187,141 @@ class SoundController {
   }
 
   async startBackgroundMusic() {
-    if (!this.enabled || this.isBackgroundLoopRunning) {
+    if (!this.enabled || this.activeForegroundAudio) {
       return
     }
 
     const context = await this.getContext()
-    if (!context) {
+    if (!context || this.backgroundSource) {
+      return
+    }
+
+    const backgroundBuffer = await this.getBackgroundBuffer(context)
+    if (!backgroundBuffer) {
       return
     }
 
     const backgroundGainNode = this.getBackgroundGainNode(context)
-    const now = context.currentTime
+    const source = context.createBufferSource()
+    source.buffer = backgroundBuffer
+    source.loop = true
+    source.loopStart = this.backgroundLoopStart
+    source.loopEnd = this.backgroundLoopEnd
+    source.connect(backgroundGainNode)
 
-    backgroundGainNode.gain.cancelScheduledValues(now)
-    backgroundGainNode.gain.setValueAtTime(0.0001, now)
-    backgroundGainNode.gain.exponentialRampToValueAtTime(
-      BACKGROUND_MUSIC_GAIN,
-      now + 0.9,
+    backgroundGainNode.gain.cancelScheduledValues(context.currentTime)
+    backgroundGainNode.gain.setValueAtTime(0.0001, context.currentTime)
+    backgroundGainNode.gain.linearRampToValueAtTime(
+      BACKGROUND_MUSIC_VOLUME,
+      context.currentTime + 0.16,
     )
 
-    this.isBackgroundLoopRunning = true
-    const token = ++this.backgroundLoopToken
-    this.scheduleBackgroundPhrase(context, now + 0.06, token)
+    source.addEventListener('ended', () => {
+      if (this.backgroundSource === source) {
+        this.backgroundSource = null
+      }
+    })
+
+    this.backgroundSource = source
+
+    try {
+      source.start(0, this.backgroundLoopStart)
+    } catch {
+      if (this.backgroundSource === source) {
+        this.backgroundSource = null
+      }
+      return
+    }
   }
 
   stopBackgroundMusic() {
-    this.isBackgroundLoopRunning = false
-    this.backgroundLoopToken += 1
-
-    if (this.backgroundLoopTimer !== null) {
-      window.clearTimeout(this.backgroundLoopTimer)
-      this.backgroundLoopTimer = null
-    }
-
-    if (!this.audioContext || !this.backgroundGainNode) {
+    if (!this.backgroundSource || !this.audioContext) {
       return
     }
 
+    const source = this.backgroundSource
     const now = this.audioContext.currentTime
-    this.backgroundGainNode.gain.cancelScheduledValues(now)
-    this.backgroundGainNode.gain.setValueAtTime(
-      Math.max(this.backgroundGainNode.gain.value, 0.0001),
-      now,
-    )
-    this.backgroundGainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.45)
+    if (this.backgroundGainNode) {
+      this.backgroundGainNode.gain.cancelScheduledValues(now)
+      this.backgroundGainNode.gain.setValueAtTime(
+        Math.max(this.backgroundGainNode.gain.value, 0.0001),
+        now,
+      )
+      this.backgroundGainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.08)
+    }
+
+    this.backgroundSource = null
+    source.stop(now + 0.1)
   }
 
-  private scheduleBackgroundPhrase(
-    context: AudioContext,
-    startTime: number,
-    token: number,
-  ) {
-    for (const [index, step] of BACKGROUND_PATTERN.entries()) {
-      const stepStart = startTime + index * BACKGROUND_STEP_DURATION
-      this.scheduleBackgroundStep(context, stepStart, step)
-    }
-
-    const phraseDuration = BACKGROUND_PATTERN.length * BACKGROUND_STEP_DURATION
-    const nextStartTime = startTime + phraseDuration
-    const nextDelayMs = Math.max((phraseDuration - 0.32) * 1000, 0)
-
-    this.backgroundLoopTimer = window.setTimeout(() => {
-      if (
-        !this.enabled ||
-        !this.isBackgroundLoopRunning ||
-        token !== this.backgroundLoopToken
-      ) {
-        return
-      }
-
-      this.scheduleBackgroundPhrase(
-        context,
-        Math.max(nextStartTime, context.currentTime + 0.06),
-        token,
-      )
-    }, nextDelayMs)
-  }
-
-  private scheduleBackgroundStep(
-    context: AudioContext,
-    startTime: number,
-    step: BackgroundStep,
-  ) {
-    if (step.bass) {
-      this.scheduleBackgroundTone(
-        context,
-        step.bass,
-        startTime,
-        BACKGROUND_STEP_DURATION * 1.5,
-        0.11,
-        'sine',
-        0.02,
-        0.22,
-      )
-      this.scheduleBackgroundTone(
-        context,
-        step.bass * 2,
-        startTime + 0.02,
-        BACKGROUND_STEP_DURATION * 1.15,
-        0.048,
-        'triangle',
-        0.03,
-        0.18,
-      )
-    }
-
-    if (step.harmony) {
-      this.scheduleBackgroundTone(
-        context,
-        step.harmony,
-        startTime + 0.04,
-        BACKGROUND_STEP_DURATION * 1.18,
-        0.064,
-        'triangle',
-        0.06,
-        0.22,
-      )
-      this.scheduleBackgroundTone(
-        context,
-        step.harmony * 1.5,
-        startTime + 0.06,
-        BACKGROUND_STEP_DURATION * 0.92,
-        0.036,
-        'sine',
-        0.05,
-        0.18,
-      )
-    }
-
-    if (step.lead) {
-      this.scheduleBackgroundTone(
-        context,
-        step.lead,
-        startTime + 0.08,
-        BACKGROUND_STEP_DURATION * 0.72,
-        0.092,
-        'square',
-        0.02,
-        0.14,
-      )
-      this.scheduleBackgroundTone(
-        context,
-        step.lead * 2,
-        startTime + 0.22,
-        BACKGROUND_STEP_DURATION * 0.24,
-        0.03,
-        'sine',
-        0.01,
-        0.06,
-      )
-    }
-  }
-
-  private scheduleBackgroundTone(
-    context: AudioContext,
-    frequency: number,
-    startTime: number,
-    duration: number,
-    gain: number,
-    type: OscillatorType,
-    attack: number,
-    release: number,
-  ) {
-    if (!this.backgroundGainNode) {
+  private async playForegroundTrack(audio: HTMLAudioElement) {
+    if (!this.enabled) {
       return
     }
 
-    const oscillator = context.createOscillator()
-    const gainNode = context.createGain()
-    const peakTime = startTime + attack
-    const noteEnd = startTime + duration
-    const releaseStart = Math.max(peakTime + 0.05, noteEnd - release)
+    this.stopForegroundAudio()
+    this.pauseBackgroundForForeground()
+    audio.currentTime = 0
+    this.activeForegroundAudio = audio
 
-    oscillator.type = type
-    oscillator.frequency.setValueAtTime(frequency, startTime)
-    gainNode.gain.setValueAtTime(0.0001, startTime)
-    gainNode.gain.linearRampToValueAtTime(gain, peakTime)
-    gainNode.gain.linearRampToValueAtTime(gain * 0.78, releaseStart)
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, noteEnd)
+    try {
+      await audio.play()
+    } catch {
+      if (this.activeForegroundAudio === audio) {
+        this.activeForegroundAudio = null
+      }
+      await this.resumeBackgroundAfterForeground()
+    }
+  }
 
-    oscillator.connect(gainNode)
-    gainNode.connect(this.backgroundGainNode)
-    oscillator.start(startTime)
-    oscillator.stop(noteEnd + 0.05)
+  private pauseBackgroundForForeground() {
+    this.shouldResumeBackgroundAfterForeground = Boolean(this.backgroundSource)
+    this.stopBackgroundMusic()
+  }
+
+  private async resumeBackgroundAfterForeground() {
+    if (!this.shouldResumeBackgroundAfterForeground) {
+      return
+    }
+
+    this.shouldResumeBackgroundAfterForeground = false
+    await this.startBackgroundMusic()
+  }
+
+  private stopForegroundAudio() {
+    if (!this.activeForegroundAudio) {
+      return
+    }
+
+    this.activeForegroundAudio.pause()
+    this.activeForegroundAudio.currentTime = 0
+    this.activeForegroundAudio = null
+    this.shouldResumeBackgroundAfterForeground = false
+  }
+
+  private async getBackgroundBuffer(context: AudioContext) {
+    if (!this.backgroundBufferPromise) {
+      this.backgroundBufferPromise = fetch(BACKGROUND_MUSIC_URL)
+        .then(async (response) => {
+          if (!response.ok) {
+            return null
+          }
+
+          const arrayBuffer = await response.arrayBuffer()
+          const audioBuffer = await context.decodeAudioData(arrayBuffer)
+          const firstHalf = audioBuffer.duration / 2
+          const loopStart = Math.min(BACKGROUND_LOOP_EDGE_TRIM, firstHalf / 4)
+          const loopEnd = Math.max(firstHalf - BACKGROUND_LOOP_EDGE_TRIM, loopStart + 1)
+
+          this.backgroundLoopStart = loopStart
+          this.backgroundLoopEnd = loopEnd
+
+          return audioBuffer
+        })
+        .catch(() => null)
+    }
+
+    return this.backgroundBufferPromise
   }
 
   private getBackgroundGainNode(context: AudioContext) {
@@ -377,6 +332,45 @@ class SoundController {
     }
 
     return this.backgroundGainNode
+  }
+
+  private getWinnerAudio() {
+    if (!this.winnerAudio) {
+      this.winnerAudio = this.createForegroundAudio(
+        WINNER_SOUND_URL,
+        WINNER_SOUND_VOLUME,
+      )
+    }
+
+    return this.winnerAudio
+  }
+
+  private getGameOverAudio() {
+    if (!this.gameOverAudio) {
+      this.gameOverAudio = this.createForegroundAudio(
+        GAME_OVER_SOUND_URL,
+        GAME_OVER_SOUND_VOLUME,
+      )
+    }
+
+    return this.gameOverAudio
+  }
+
+  private createForegroundAudio(src: string, volume: number) {
+    const audio = new Audio(src)
+    audio.preload = 'auto'
+    audio.volume = volume
+
+    audio.addEventListener('ended', () => {
+      if (this.activeForegroundAudio !== audio) {
+        return
+      }
+
+      this.activeForegroundAudio = null
+      void this.resumeBackgroundAfterForeground()
+    })
+
+    return audio
   }
 
   private async getContext() {
