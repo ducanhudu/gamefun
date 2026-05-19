@@ -1,6 +1,7 @@
 import { BoardPiece } from '@kenrick95/c4'
 
 const STORAGE_KEY = 'xo-plus-sound-enabled'
+const MASTER_GAIN_MULTIPLIER = 1.8
 
 type Envelope = {
   frequency: number
@@ -104,8 +105,9 @@ class SoundController {
       oscillator.type = envelope.type ?? 'sine'
       oscillator.frequency.setValueAtTime(envelope.frequency, noteStart)
 
+      const gain = Math.min(envelope.gain * MASTER_GAIN_MULTIPLIER, 0.24)
       gainNode.gain.setValueAtTime(0.0001, noteStart)
-      gainNode.gain.linearRampToValueAtTime(envelope.gain, noteStart + 0.02)
+      gainNode.gain.linearRampToValueAtTime(gain, noteStart + 0.02)
       gainNode.gain.exponentialRampToValueAtTime(0.0001, noteEnd)
 
       oscillator.connect(gainNode)
