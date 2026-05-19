@@ -174,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondPlayerName = formData.get('player-2-name') as string | null
     const aiDifficulty = (formData.get('ai-difficulty') as AiDifficulty) || 'medium'
     initGame(gameMode, [firstPlayerName, secondPlayerName], aiDifficulty)
+    void soundController.syncBackgroundMusic()
   })
 
   settingsForm.addEventListener('input', () => {
